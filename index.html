@@ -21,11 +21,11 @@
     font-weight: 600;
     color: #60a5fa;
     border-bottom: 1px solid #1e293b;
-    display: flex; /* Added for alignment */
-    justify-content: space-between; /* Added for alignment */
-    align-items: center; /* Added for alignment */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  #clear-btn { /* Added style for the clear button */
+  #clear-btn {
     padding: 6px 12px;
     font-size: 0.8em;
     font-weight: 500;
@@ -34,7 +34,7 @@
     border-radius: 6px;
     cursor: pointer;
     color: white;
-    margin-right: 10px; /* Space from the edge */
+    margin-right: 10px;
   }
   #chat-box {
     flex: 1;
@@ -102,7 +102,7 @@
 <body>
   <header>
     <span>NOT AI - GPT-4o mini</span>
-    <button id="clear-btn">Clear Chat</button> <!-- Added clear button -->
+    <button id="clear-btn">Clear Chat</button>
   </header>
   <div id="chat-box"></div>
   <footer>
@@ -111,13 +111,20 @@
   </footer>
 
 <script>
-const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev/"; // <-- replace
+const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev"; // <-- no trailing slash!
 const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
-const clearBtn = document.getElementById("clear-btn"); // Get the new clear button
+const clearBtn = document.getElementById("clear-btn");
 
-// Load memory (previous messages)
+// Generate or reuse unique user ID
+let user_id = localStorage.getItem("user_id");
+if (!user_id) {
+  user_id = crypto.randomUUID();
+  localStorage.setItem("user_id", user_id);
+}
+
+// Local cache of messages
 let messages = JSON.parse(localStorage.getItem("chatMemory") || "[]");
 renderChat();
 
@@ -128,7 +135,6 @@ input.addEventListener("keypress", e => {
     sendMessage();
   }
 });
-// Add event listener for the clear button
 clearBtn.addEventListener("click", clearMemory);
 
 async function sendMessage() {
@@ -139,24 +145,19 @@ async function sendMessage() {
   input.value = "";
   messages.push({ role: "user", content: userText });
   saveMemory();
-  
   appendMessage("assistant", "Thinking...", true);
   scrollToBottom();
 
   try {
-    const user_id = localStorage.getItem("user_id") || crypto.randomUUID();
-localStorage.setItem("user_id", user_id);
-
-const response = await fetch(WORKER_URL.replace(/\/$/, ""), { // remove trailing slash
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    user_id,
-    messages,
-    reset: false
-  })
-});
-
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id,
+        messages: [{ role: "user", content: userText }],
+        reset: false
+      })
+    });
 
     const data = await response.json();
     const assistant = data.choices?.[0]?.message?.content || "⚠️ No response";
@@ -199,11 +200,20 @@ function saveMemory() {
   localStorage.setItem("chatMemory", JSON.stringify(messages));
 }
 
-// Function to clear memory
-function clearMemory() {
+async function clearMemory() {
   localStorage.removeItem("chatMemory");
   messages = [];
   renderChat();
+
+  try {
+    await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, reset: true })
+    });
+  } catch (err) {
+    console.error("Error resetting memory:", err);
+  }
 }
 </script>
 </body>
