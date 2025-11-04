@@ -21,6 +21,20 @@
     font-weight: 600;
     color: #60a5fa;
     border-bottom: 1px solid #1e293b;
+    display: flex; /* Added for alignment */
+    justify-content: space-between; /* Added for alignment */
+    align-items: center; /* Added for alignment */
+  }
+  #clear-btn { /* Added style for the clear button */
+    padding: 6px 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    background: #dc2626;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    margin-right: 10px; /* Space from the edge */
   }
   #chat-box {
     flex: 1;
@@ -86,7 +100,10 @@
 </style>
 </head>
 <body>
-  <header>NOT AI - GPT-4o mini</header>
+  <header>
+    <span>NOT AI - GPT-4o mini</span>
+    <button id="clear-btn">Clear Chat</button> <!-- Added clear button -->
+  </header>
   <div id="chat-box"></div>
   <footer>
     <textarea id="input" placeholder="Type your message..."></textarea>
@@ -98,6 +115,7 @@ const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev/"; // <-- r
 const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
+const clearBtn = document.getElementById("clear-btn"); // Get the new clear button
 
 // Load memory (previous messages)
 let messages = JSON.parse(localStorage.getItem("chatMemory") || "[]");
@@ -110,6 +128,8 @@ input.addEventListener("keypress", e => {
     sendMessage();
   }
 });
+// Add event listener for the clear button
+clearBtn.addEventListener("click", clearMemory);
 
 async function sendMessage() {
   const userText = input.value.trim();
@@ -171,8 +191,12 @@ function saveMemory() {
   localStorage.setItem("chatMemory", JSON.stringify(messages));
 }
 
-// Optional: clear memory (use in console if needed)
-window.clearMemory = () => { localStorage.removeItem("chatMemory"); messages = []; renderChat(); };
+// Function to clear memory
+function clearMemory() {
+  localStorage.removeItem("chatMemory");
+  messages = [];
+  renderChat();
+}
 </script>
 </body>
 </html>
