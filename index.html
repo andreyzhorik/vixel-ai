@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>GPT via Cloudflare Worker</title>
+<title>Not Ai</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   body {
@@ -86,7 +86,7 @@
 </style>
 </head>
 <body>
-  <header>GPT via Worker</header>
+  <header>NOT AI - GPT-4o mini</header>
   <div id="chat-box"></div>
   <footer>
     <textarea id="input" placeholder="Type your message..."></textarea>
@@ -98,18 +98,6 @@ const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev/"; // <-- r
 const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
-
-// Load memory (previous messages)
-let messages = JSON.parse(localStorage.getItem("chatMemory") || "[]");
-renderChat();
-
-sendBtn.addEventListener("click", sendMessage);
-input.addEventListener("keypress", e => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
 
 async function sendMessage() {
   const userText = input.value.trim();
@@ -146,15 +134,6 @@ function appendMessage(role, text, loading = false) {
   div.className = `msg ${role}` + (loading ? " loading" : "");
   div.textContent = text;
   chatBox.appendChild(div);
-}
-
-function replaceLastAssistantMessage(text) {
-  const nodes = chatBox.querySelectorAll(".assistant");
-  if (nodes.length) {
-    const last = nodes[nodes.length - 1];
-    last.textContent = text;
-    last.classList.remove("loading");
-  }
 }
 
 function renderChat() {
