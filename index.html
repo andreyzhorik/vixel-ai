@@ -144,11 +144,19 @@ async function sendMessage() {
   scrollToBottom();
 
   try {
-    const response = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages })
-    });
+    const user_id = localStorage.getItem("user_id") || crypto.randomUUID();
+localStorage.setItem("user_id", user_id);
+
+const response = await fetch(WORKER_URL.replace(/\/$/, ""), { // remove trailing slash
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    user_id,
+    messages,
+    reset: false
+  })
+});
+
 
     const data = await response.json();
     const assistant = data.choices?.[0]?.message?.content || "⚠️ No response";
