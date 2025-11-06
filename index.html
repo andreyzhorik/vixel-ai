@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>NOT AI - GPT-4o mini</title>
+<title>NOT AI - Multi-AI Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{
@@ -18,409 +18,155 @@
     --radius:12px;
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#041023);color:#e6eef8}
-  .app {
-    max-width:900px;
-    margin:18px auto;
-    height:calc(100vh - 36px);
-    display:flex;
-    flex-direction:column;
-    border-radius:14px;
-    overflow:hidden;
-    border:1px solid rgba(255,255,255,0.03);
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-  }
-
-  header.app-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:14px 18px;
-    gap:12px;
-    background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent);
-    border-bottom:1px solid rgba(255,255,255,0.03);
-  }
-  .brand {
-    display:flex;
-    gap:12px;
-    align-items:center;
-  }
-  .logo {
-    width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--primary));
-    display:flex;align-items:center;justify-content:center;font-weight:800;color:#001;
-    box-shadow:0 3px 10px rgba(37,99,235,0.12);
-  }
-  .title {font-weight:700;font-size:1rem;color:var(--accent)}
-  .subtitle {font-size:0.8rem;color:var(--muted);margin-top:2px}
-
-  .controls {
-    display:flex;
-    gap:10px;
-    align-items:center;
-  }
-  .btn {
-    background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px 12px;border-radius:10px;
-    cursor:pointer;font-weight:600;font-size:0.9rem;display:inline-flex;gap:8px;align-items:center;
-  }
-  .btn.primary {background:var(--primary);border:none;color:white;box-shadow:0 6px 14px rgba(37,99,235,0.12)}
-  .btn.danger {background:var(--danger);border:none;color:white}
+  .app{max-width:900px;margin:18px auto;height:calc(100vh - 36px);display:flex;flex-direction:column;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 30px rgba(2,6,23,0.6);}
+  header.app-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;gap:12px;background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent);border-bottom:1px solid rgba(255,255,255,0.03);}
+  .brand{display:flex;gap:12px;align-items:center;}
+  .logo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--primary));display:flex;align-items:center;justify-content:center;font-weight:800;color:#001;box-shadow:0 3px 10px rgba(37,99,235,0.12);}
+  .title{font-weight:700;font-size:1rem;color:var(--accent)}
+  .subtitle{font-size:0.8rem;color:var(--muted);margin-top:2px}
+  .controls{display:flex;gap:10px;align-items:center;}
+  select#provider{background:var(--card);color:white;border:1px solid rgba(255,255,255,0.1);padding:8px;border-radius:10px;font-size:0.9rem;}
+  .btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;font-size:0.9rem;display:inline-flex;gap:8px;align-items:center;}
+  .btn.primary{background:var(--primary);border:none;color:white;box-shadow:0 6px 14px rgba(37,99,235,0.12)}
+  .btn.danger{background:var(--danger);border:none;color:white}
   .btn:disabled{opacity:0.6;cursor:not-allowed}
-
-  main.chat {
-    display:flex;
-    flex-direction:column;
-    flex:1;
-    overflow:hidden;
-    background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
-  }
-
-  #chat-box {
-    padding:18px;
-    overflow:auto;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    scroll-behavior:smooth;
-  }
-
-  .msg {
-    max-width:78%;
-    padding:10px 14px;
-    border-radius:12px;
-    line-height:1.4;
-    white-space:pre-wrap;
-    box-shadow: 0 4px 14px rgba(2,6,23,0.45);
-    transform-origin:bottom;
-    animation: fadeIn .12s ease-out;
-  }
-  .meta {font-size:0.75rem;color:var(--muted);margin-top:6px;text-align:right;opacity:0.85}
-
-  .user {
-    align-self:flex-end;
-    background:linear-gradient(135deg,var(--bubble-user), #2563eb);
-    color:#ffffff;
-    border-bottom-right-radius:6px;
-  }
-  .assistant {
-    align-self:flex-start;
-    background:var(--bubble-assistant);
-    color:#e6eef8;
-    border-bottom-left-radius:6px;
-  }
-  .loading {font-style:italic;color:var(--muted)}
-
-  footer.input-area {
-    padding:12px;
-    display:flex;
-    gap:10px;
-    align-items:flex-end;
-    border-top:1px solid rgba(255,255,255,0.02);
-    background:var(--panel);
-  }
-
-  textarea#input {
-    flex:1;
-    min-height:48px;
-    max-height:160px;
-    resize:vertical;
-    padding:12px;
-    border-radius:10px;
-    border:1px solid rgba(255,255,255,0.03);
-    background:#041326;
-    color:#e6eef8;
-    outline:none;font-size:1rem;
-  }
-
-  .small {
-    font-size:0.85rem;color:var(--muted)
-  }
-
-  .right-col {
-    display:flex;
-    gap:8px;
-    align-items:center;
-  }
-
-  .toast {
-    position:fixed;
-    bottom:22px;
-    left:50%;
-    transform:translateX(-50%);
-    background:rgba(0,0,0,0.6);
-    color:white;padding:10px 14px;border-radius:10px;
-    font-weight:600;display:none;
-  }
-
-  @keyframes fadeIn {
-    from {opacity:0; transform:translateY(6px)}
-    to {opacity:1; transform:translateY(0)}
-  }
-
-  /* responsive */
-  @media (max-width:640px){
-    .app{height:100vh;margin:0;border-radius:0}
-    .brand .subtitle{display:none}
-    .controls .small{display:none}
-    #chat-box{padding:12px}
-  }
+  main.chat{display:flex;flex-direction:column;flex:1;overflow:hidden;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);}
+  #chat-box{padding:18px;overflow:auto;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+  .msg{max-width:78%;padding:10px 14px;border-radius:12px;line-height:1.4;white-space:pre-wrap;box-shadow:0 4px 14px rgba(2,6,23,0.45);animation:fadeIn .12s ease-out;}
+  .meta{font-size:0.75rem;color:var(--muted);margin-top:6px;text-align:right;opacity:0.85}
+  .user{align-self:flex-end;background:linear-gradient(135deg,var(--bubble-user), #2563eb);color:#ffffff;border-bottom-right-radius:6px;}
+  .assistant{align-self:flex-start;background:var(--bubble-assistant);color:#e6eef8;border-bottom-left-radius:6px;}
+  .loading{font-style:italic;color:var(--muted)}
+  footer.input-area{padding:12px;display:flex;gap:10px;align-items:flex-end;border-top:1px solid rgba(255,255,255,0.02);background:var(--panel);}
+  textarea#input{flex:1;min-height:48px;max-height:160px;resize:vertical;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:#041326;color:#e6eef8;outline:none;font-size:1rem;}
+  .small{font-size:0.85rem;color:var(--muted)}
+  .right-col{display:flex;gap:8px;align-items:center;}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:white;padding:10px 14px;border-radius:10px;font-weight:600;display:none;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:640px){.app{height:100vh;margin:0;border-radius:0}.brand .subtitle{display:none}.controls .small{display:none}#chat-box{padding:12px}}
 </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="Chat app">
+  <div class="app" role="application">
     <header class="app-header">
       <div class="brand">
         <div class="logo">N</div>
         <div>
-          <div class="title">NOT AI - GPT-4o mini</div>
-          <div class="subtitle">Privacy-first local memory • Cloud model worker</div>
+          <div class="title">NOT AI - Multi-AI Chat</div>
+          <div class="subtitle">Privacy-first • Cloud model worker</div>
         </div>
       </div>
-
       <div class="controls">
+        <select id="provider">
+          <option value="openai">GPT-4o mini</option>
+          <option value="groq">Groq Mixtral</option>
+          <option value="huggingface">Hugging Face</option>
+        </select>
         <div class="small">User: <span id="user-id-label" style="font-family:monospace"></span></div>
-        <button id="clear-btn" class="btn danger" title="Clear chat & reset AI memory">Clear Chat</button>
-        <button id="new-session-btn" class="btn" title="Start a fresh session (keeps conversation but assigns new user id)">New Session</button>
+        <button id="clear-btn" class="btn danger">Clear Chat</button>
+        <button id="new-session-btn" class="btn">New Session</button>
       </div>
     </header>
 
-    <main class="chat" id="main">
-      <div id="chat-box" aria-live="polite" aria-atomic="false"></div>
-    </main>
+    <main class="chat"><div id="chat-box"></div></main>
 
     <footer class="input-area">
       <textarea id="input" placeholder="Type your message... (Shift+Enter = newline, Enter = send)"></textarea>
-      <div class="right-col">
-        <button id="send" class="btn primary">Send</button>
-      </div>
+      <div class="right-col"><button id="send" class="btn primary">Send</button></div>
     </footer>
   </div>
 
-  <div id="toast" class="toast" role="status" aria-live="assertive"></div>
+  <div id="toast" class="toast"></div>
 
 <script>
-/*
-  Instructions:
-  - Save this file as index.html in your GitHub Pages repo.
-  - Set WORKER_URL to your Cloudflare Workers URL (workers.dev or custom domain).
-  - Important: Your Worker must return CORS headers allowing requests from github.io (or use Access-Control-Allow-Origin: *).
-    If needed add these headers in your Worker response:
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type,Authorization"
-    and respond to OPTIONS preflight with 204.
-*/
-
-const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev"; // <- set your worker URL here (no trailing slash)
+const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev"; 
 const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
 const clearBtn = document.getElementById("clear-btn");
 const newSessionBtn = document.getElementById("new-session-btn");
+const providerSelect = document.getElementById("provider");
 const toast = document.getElementById("toast");
 const userIdLabel = document.getElementById("user-id-label");
 
-// Generate or reuse unique user ID
-let user_id = localStorage.getItem("user_id");
-if (!user_id) {
-  user_id = crypto.randomUUID();
-  localStorage.setItem("user_id", user_id);
-}
-userIdLabel.textContent = user_id.slice(0, 8);
+let user_id = localStorage.getItem("user_id") || crypto.randomUUID();
+localStorage.setItem("user_id", user_id);
+userIdLabel.textContent = user_id.slice(0,8);
 
-// Local cache of messages
 let messages = JSON.parse(localStorage.getItem("chatMemory") || "[]");
 renderChat();
 
-// Event listeners
-sendBtn.addEventListener("click", sendMessage);
-input.addEventListener("keydown", handleInputKey);
-clearBtn.addEventListener("click", confirmClearMemory);
-newSessionBtn.addEventListener("click", newSession);
+sendBtn.onclick = sendMessage;
+input.onkeydown = e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}};
+clearBtn.onclick = ()=>confirmClearMemory();
+newSessionBtn.onclick = ()=>newSession();
 
-// keyboard shortcuts
-window.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-    e.preventDefault();
-    input.focus();
-  }
-  if (e.key === "Escape") {
-    input.blur();
-  }
-});
-
-async function sendMessage() {
+async function sendMessage(){
   const userText = input.value.trim();
-  if (!userText) return;
-
+  if(!userText) return;
+  const provider = providerSelect.value;
   appendMessage("user", userText);
   input.value = "";
-  messages.push({ role: "user", content: userText, ts: Date.now() });
+  messages.push({role:"user",content:userText,ts:Date.now()});
   saveMemory();
   appendMessage("assistant", "Thinking...", true);
   scrollToBottom();
-
-  try {
-    const response = await fetch(WORKER_URL, {
-      method: "POST",
-      mode: "cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+  try{
+    const response = await fetch(WORKER_URL,{
+      method:"POST",mode:"cors",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        provider,
         user_id,
-        messages: [{ role: "user", content: userText }],
-        reset: false
+        messages:[{role:"user",content:userText}],
+        reset:false
       })
     });
-
-    if (!response.ok) {
-      // Try to read text for better error info
-      const errText = await response.text().catch(() => response.statusText);
-      throw new Error(`Worker responded ${response.status}: ${errText}`);
+    const text = await response.text();
+    if(!response.ok){
+      const msg = text.includes("rate_limit") ?
+        "⚠️ Please wait a few seconds — rate limit reached. Try again soon." :
+        "⚠️ Server error: " + text;
+      replaceLastAssistantMessage(msg);
+      return;
     }
-
-    const data = await response.json();
-    // Extract typical OpenAI-like response
-    const assistant = data.choices?.[0]?.message?.content
-                   || data.choices?.[0]?.text
-                   || data.message?.content
-                   || (typeof data === "string" ? data : JSON.stringify(data));
-
+    const data = JSON.parse(text);
+    const assistant = data.choices?.[0]?.message?.content || 
+                      data.choices?.[0]?.text || 
+                      data.message?.content || text;
     replaceLastAssistantMessage(assistant);
-    messages.push({ role: "assistant", content: assistant, ts: Date.now() });
+    messages.push({role:"assistant",content:assistant,ts:Date.now()});
     saveMemory();
-  } catch (err) {
-    replaceLastAssistantMessage("❌ Error: " + (err.message || err));
+  }catch(err){
+    replaceLastAssistantMessage("⚠️ Network error — please try again.");
   }
   scrollToBottom();
 }
 
-function handleInputKey(e){
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+function appendMessage(role,text,loading=false){
+  const div=document.createElement("div");
+  div.className=`msg ${role}`+(loading?" loading":"");
+  div.innerHTML=`<div>${text}</div><div class="meta">${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
+  chatBox.appendChild(div);scrollToBottom();
 }
-
-function appendMessage(role, text, loading = false) {
-  const wrapper = document.createElement("div");
-  wrapper.className = `msg ${role}` + (loading ? " loading" : "");
-  const content = document.createElement("div");
-  content.textContent = text;
-  wrapper.appendChild(content);
-
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  const ts = new Date();
-  meta.textContent = ts.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-  wrapper.appendChild(meta);
-
-  chatBox.appendChild(wrapper);
-  scrollToBottom();
-}
-
-function replaceLastAssistantMessage(text) {
-  const nodes = chatBox.querySelectorAll(".assistant");
-  if (nodes.length) {
-    const last = nodes[nodes.length - 1];
-    last.querySelector("div").textContent = text;
+function replaceLastAssistantMessage(text){
+  const nodes=chatBox.querySelectorAll(".assistant");
+  if(nodes.length){
+    const last=nodes[nodes.length-1];
+    last.querySelector("div").textContent=text;
     last.classList.remove("loading");
-    const meta = last.querySelector(".meta");
-    if (meta) meta.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    last.querySelector(".meta").textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
   }
 }
-
-function renderChat() {
-  chatBox.innerHTML = "";
-  messages.forEach(msg => {
-    const wrapper = document.createElement("div");
-    wrapper.className = `msg ${msg.role}`;
-    const content = document.createElement("div");
-    content.textContent = msg.content;
-    wrapper.appendChild(content);
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.textContent = msg.ts ? new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
-    wrapper.appendChild(meta);
-    chatBox.appendChild(wrapper);
-  });
-  scrollToBottom();
-}
-
-function scrollToBottom() {
-  requestAnimationFrame(() => {
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
-}
-
-function saveMemory() {
-  try {
-    localStorage.setItem("chatMemory", JSON.stringify(messages));
-  } catch (err) {
-    console.warn("Could not save chat memory:", err);
-  }
-}
-
-async function confirmClearMemory() {
-  const ok = confirm("Clear all chat memory for this user and tell the AI to reset? This cannot be undone.");
-  if (!ok) return;
-  await clearMemory({ regenUserId: false });
-}
-
-async function clearMemory({ regenUserId = false } = {}) {
-  clearBtn.disabled = true;
-  clearBtn.textContent = "Clearing...";
-  showToast("Clearing chat...");
-
-  localStorage.removeItem("chatMemory");
-  messages = [];
-  renderChat();
-
-  if (regenUserId) {
-    user_id = crypto.randomUUID();
-    localStorage.setItem("user_id", user_id);
-    userIdLabel.textContent = user_id.slice(0,8);
-  }
-
-  try {
-    await fetch(WORKER_URL, {
-      method: "POST",
-      mode: "cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id, reset: true })
-    });
-    showToast("Chat cleared.");
-  } catch (err) {
-    console.error("Error resetting memory:", err);
-    showToast("Cleared locally but worker reset failed.");
-  } finally {
-    clearBtn.disabled = false;
-    clearBtn.textContent = "Clear Chat";
-    setTimeout(() => { hideToast(); }, 1400);
-  }
-}
-
-function newSession(){
-  const ok = confirm("Start a new session with a new user id? This isolates the AI memory to a new id.");
-  if (!ok) return;
-  user_id = crypto.randomUUID();
-  localStorage.setItem("user_id", user_id);
-  userIdLabel.textContent = user_id.slice(0,8);
-  showToast("New session created.");
-  setTimeout(hideToast, 1200);
-}
-
-function showToast(text){
-  toast.textContent = text;
-  toast.style.display = "block";
-  toast.style.opacity = "1";
-}
-
-function hideToast(){
-  toast.style.opacity = "0";
-  setTimeout(()=> toast.style.display = "none", 220);
-}
+function renderChat(){chatBox.innerHTML="";messages.forEach(m=>appendMessage(m.role,m.content));scrollToBottom();}
+function scrollToBottom(){requestAnimationFrame(()=>chatBox.scrollTop=chatBox.scrollHeight);}
+function saveMemory(){localStorage.setItem("chatMemory",JSON.stringify(messages));}
+async function confirmClearMemory(){if(confirm("Clear chat?")){localStorage.removeItem("chatMemory");messages=[];renderChat();showToast("Cleared.");setTimeout(hideToast,1200);}}
+function newSession(){user_id=crypto.randomUUID();localStorage.setItem("user_id",user_id);userIdLabel.textContent=user_id.slice(0,8);showToast("New session.");setTimeout(hideToast,1200);}
+function showToast(t){toast.textContent=t;toast.style.display="block";toast.style.opacity="1";}
+function hideToast(){toast.style.opacity="0";setTimeout(()=>toast.style.display="none",220);}
 </script>
 </body>
 </html>
