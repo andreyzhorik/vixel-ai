@@ -1,293 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>NOT AI – Chat UI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NOT AI — GPTS</title>
 <style>
-  :root {
-    --bg: #0a0f1c;
-    --panel: #10182a;
-    --accent: #3b82f6;
-    --accent-soft: #1d4ed8;
-    --muted: #94a3b8;
-    --text: #e5eaf5;
-    --radius: 16px;
-    --shadow: 0 10px 30px rgba(0,0,0,0.3);
-    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  :root{
+    --bg:#0a0f1c; --panel:#10182a; --accent:#3b82f6; --accent-soft:#1d4ed8;
+    --muted:#94a3b8; --text:#e5eaf5; --radius:14px; --shadow:0 10px 30px rgba(0,0,0,.3);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: linear-gradient(180deg, var(--bg), #060b17);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .app {
-    width: 95%;
-    max-width: 800px;
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    background: var(--panel);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.05);
-  }
-
-  header {
-    padding: 18px 22px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 1.1rem;
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(59,130,246,0.3);
-  }
-
-  .title { font-weight: 700; font-size: 1.1rem; color: var(--accent); }
-  .subtitle { font-size: 0.85rem; color: var(--muted); }
-
-  .controls { display: flex; align-items: center; gap: 10px; }
-
-  select {
-    background: rgba(255,255,255,0.05);
-    color: var(--text);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 8px 10px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .btn {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .btn:hover { background: var(--accent-soft); }
-
-  .chat-box {
-    flex: 1;
-    padding: 22px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .msg {
-    max-width: 75%;
-    padding: 12px 16px;
-    border-radius: 14px;
-    line-height: 1.5;
-    font-size: 1rem;
-    word-wrap: break-word;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  }
-
-  .msg.assistant {
-    align-self: flex-start;
-    background: #162037;
-    color: #e5eaf5;
-    border-bottom-left-radius: 6px;
-  }
-
-  .msg.user {
-    align-self: flex-end;
-    background: linear-gradient(135deg, var(--accent-soft), var(--accent));
-    color: white;
-    border-bottom-right-radius: 6px;
-  }
-
-  footer {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px;
-    background: #0d1525;
-    border-top: 1px solid rgba(255,255,255,0.05);
-  }
-
-  textarea {
-    flex: 1;
-    background: #0c1222;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
-    color: var(--text);
-    padding: 12px;
-    font-size: 1rem;
-    resize: none;
-    height: 50px;
-    outline: none;
-  }
-
-  textarea::placeholder { color: var(--muted); }
-
-  button.send {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    box-shadow: 0 6px 18px rgba(59,130,246,0.3);
-    transition: all 0.2s ease;
-  }
-
-  button.send:hover { background: var(--accent-soft); }
-
-  ::-webkit-scrollbar { width: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-
-  @media (max-width: 640px) {
-    .app { height: 100vh; border-radius: 0; }
-    header { padding: 14px; }
-    footer { padding: 10px; }
-  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,var(--bg),#060b17);color:var(--text)}
+  .app{width:95%;max-width:900px;height:90vh;background:var(--panel);border-radius:var(--radius);
+    box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+  .title{font-weight:700;color:var(--accent)}
+  .controls{display:flex;gap:10px;align-items:center}
+  select{background:rgba(255,255,255,0.03);color:var(--text);border:1px solid rgba(255,255,255,0.06);
+    padding:8px 10px;border-radius:10px;font-weight:600;cursor:pointer}
+  .btn{background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+  .chat{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:78%;padding:12px 16px;border-radius:12px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,0.3)}
+  .msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent-soft),var(--accent));color:#fff;border-bottom-right-radius:6px}
+  .msg.assistant{align-self:flex-start;background:#111827;color:var(--text);border-bottom-left-radius:6px}
+  .meta{font-size:12px;color:var(--muted);margin-top:6px}
+  footer{display:flex;gap:10px;padding:14px;border-top:1px solid rgba(255,255,255,0.04);background:#0d1525}
+  textarea{flex:1;min-height:56px;border-radius:10px;padding:12px;background:#0c1222;border:1px solid rgba(255,255,255,0.06);color:var(--text);resize:none}
+  button.send{background:var(--accent);color:#fff;border:none;padding:12px 18px;border-radius:10px;font-weight:700;cursor:pointer}
+  .small{font-size:12px;color:var(--muted)}
+  .typing{width:48px;height:18px;border-radius:12px;background:#162037;display:flex;gap:6px;align-items:center;padding:6px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:blink 1s infinite}
+  .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+  @keyframes blink{0%{opacity:.15}50%{opacity:1}100%{opacity:.15}}
+  @media (max-width:640px){.app{height:100vh;border-radius:0}}
 </style>
 </head>
 <body>
-  <div class="app">
+  <div class="app" role="application" aria-label="NOT AI chat UI">
     <header>
       <div class="brand">
         <div class="logo">N</div>
         <div>
           <div class="title">NOT AI</div>
-          <div class="subtitle">Local & Private Chat UI</div>
+          <div class="small">Local & Private Chat UI</div>
         </div>
       </div>
+
       <div class="controls">
-        <select id="provider">
-          <option value="gpt-4o-mini">GPT-4o Mini (Free)</option>
-          <option value="gpt-4o" data-locked="true">GPT-4o (Invite)</option>
-          <option value="gpt-5-mini" data-locked="true">GPT-5 Mini (Invite)</option>
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        <label class="small" for="provider">Model</label>
+        <select id="provider" title="Choose model">
+          <!-- locked models have data-locked="true" -->
+          <option value="gpt-4.1" data-locked="true">GPT-4.1 (locked)</option>
+          <option value="gpt-4o" data-locked="true">GPT-4o (locked)</option>
+          <option value="gpt-4o-mini" data-locked="false">GPT-4o-mini (free)</option>
+          <option value="gpt-3.5-turbo" data-locked="false">GPT-3.5-turbo (free)</option>
         </select>
-        <button class="btn" id="clear">Clear</button>
+        <button class="btn" id="clearBtn" title="Clear chat">Clear</button>
       </div>
     </header>
 
-    <main class="chat-box" id="chat"></main>
+    <main class="chat" id="chat" aria-live="polite"></main>
 
     <footer>
-      <textarea id="prompt" placeholder="Type your message..."></textarea>
-      <button class="send" id="send">Send</button>
+      <textarea id="prompt" placeholder="Type your message..." aria-label="Message input"></textarea>
+      <button class="send" id="sendBtn">Send</button>
     </footer>
   </div>
 
-  <script>
-    const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev";
-    const INVITE_KEY = "invite_code";
+<script>
+(() => {
+  // === CONFIG: set your worker URL (must include https://) ===
+  const WORKER_URL = "https://plain-pine-b32a.mrviktor2426.workers.dev"; // <-- update if different
 
-    const chatBox = document.getElementById("chat");
-    const sendBtn = document.getElementById("send");
-    const promptInput = document.getElementById("prompt");
-    const providerSelect = document.getElementById("provider");
-    const clearBtn = document.getElementById("clear");
+  // === DOM ===
+  const chatEl = document.getElementById("chat");
+  const providerSel = document.getElementById("provider");
+  const promptEl = document.getElementById("prompt");
+  const sendBtn = document.getElementById("sendBtn");
+  const clearBtn = document.getElementById("clearBtn");
 
-    function addMessage(content, role) {
-      const div = document.createElement("div");
-      div.className = "msg " + role;
-      div.textContent = content;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+  const INVITE_STORE_PREFIX = "invite_for_"; // localStorage key per model
+
+  // helpers
+  function createMsg(text, role = "assistant") {
+    const div = document.createElement("div");
+    div.className = "msg " + (role === "user" ? "user" : "assistant");
+    div.textContent = text;
+    return div;
+  }
+
+  function addMeta(node, text) {
+    const m = document.createElement("div");
+    m.className = "meta";
+    m.textContent = text;
+    node.appendChild(m);
+  }
+
+  function showTyping() {
+    const box = document.createElement("div");
+    box.className = "msg assistant";
+    box.id = "typingIndicator";
+    const t = document.createElement("div");
+    t.className = "typing";
+    t.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    box.appendChild(t);
+    chatEl.appendChild(box);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById("typingIndicator");
+    if (el) el.remove();
+  }
+
+  // display readable error JSON or string
+  function readableError(err) {
+    if (!err) return "Unknown error";
+    if (typeof err === "string") return err;
+    try { return JSON.stringify(err, null, 2); } catch { return String(err); }
+  }
+
+  // check invite for a locked model via worker /verify_code
+  async function verifyInviteForModel(model, code) {
+    try {
+      const url = new URL(WORKER_URL);
+      url.searchParams.set("verify_code", code);
+      // optional: include model param if your worker needs it
+      url.searchParams.set("model", model);
+      const res = await fetch(url.toString(), { method: "GET" });
+      const json = await res.json();
+      return !!json.valid;
+    } catch (e) {
+      console.error("verifyInviteForModel error", e);
+      return false;
+    }
+  }
+
+  // when selecting a model that is locked, prompt and verify
+  providerSel.addEventListener("change", async (ev) => {
+    const sel = providerSel.selectedOptions[0];
+    const model = sel.value;
+    const locked = sel.dataset.locked === "true";
+    if (!locked) return;
+
+    const stored = localStorage.getItem(INVITE_STORE_PREFIX + model);
+    if (stored) return; // already unlocked
+
+    // ask user for code
+    const code = prompt("🔒 This model requires an invite code. Enter code to unlock " + model + ":");
+    if (!code) {
+      alert("No code entered — switching to GPT-4o-mini.");
+      providerSel.value = "gpt-4o-mini";
+      return;
     }
 
-    clearBtn.onclick = () => { chatBox.innerHTML = ""; };
+    // verify with worker
+    addSystemMessage("Verifying invite…");
+    const ok = await verifyInviteForModel(model, code);
+    removeSystemMessages();
+    if (ok) {
+      localStorage.setItem(INVITE_STORE_PREFIX + model, code);
+      alert("✅ Invite accepted for " + model);
+    } else {
+      alert("❌ Invalid invite. Reverting to GPT-4o-mini.");
+      providerSel.value = "gpt-4o-mini";
+    }
+  });
 
-    providerSelect.addEventListener("change", async () => {
-      const selected = providerSelect.selectedOptions[0];
-      if (selected.dataset.locked === "true") {
-        const saved = localStorage.getItem(INVITE_KEY);
-        if (!saved) {
-          const code = prompt("🔒 This model requires an invite code:");
-          if (!code) {
-            alert("No code entered — reverting to free model.");
-            providerSelect.value = "gpt-4o-mini";
-            return;
+  // small helper to add a temporary system message (non-sent)
+  function addSystemMessage(msgText) {
+    const node = createMsg(msgText, "assistant");
+    node.id = "systemMsg";
+    chatEl.appendChild(node);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+  function removeSystemMessages() {
+    const el = document.getElementById("systemMsg");
+    if (el) el.remove();
+  }
+
+  // send message -> worker -> openai
+  async function sendMessage(text) {
+    const model = providerSel.value;
+
+    // show user message
+    const u = createMsg(text, "user");
+    chatEl.appendChild(u);
+    chatEl.scrollTop = chatEl.scrollHeight;
+
+    // typing indicator
+    showTyping();
+
+    // prepare payload
+    const payload = { provider: model, messages: [{ role: "user", content: text }] };
+
+    try {
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // parse JSON safely
+      const textResp = await res.text();
+      let data;
+      try { data = JSON.parse(textResp); } catch (e) { data = { error: textResp }; }
+
+      // if API-level error present
+      if (data?.error) {
+        // show readable error
+        const errObj = data.error;
+        const errStr = readableError(errObj);
+        hideTyping();
+
+        // If it is insufficient_quota, fallback to gpt-4o-mini automatically once
+        const isQuota = (errObj && (errObj.code === "insufficient_quota" || (typeof errObj === "string" && errObj.toLowerCase().includes("quota"))));
+        if (isQuota && model !== "gpt-4o-mini") {
+          const notice = createMsg("⚠️ Quota error for " + model + ". Falling back to gpt-4o-mini...", "assistant");
+          chatEl.appendChild(notice);
+          chatEl.scrollTop = chatEl.scrollHeight;
+
+          // try again with fallback model
+          const fallbackPayload = { provider: "gpt-4o-mini", messages: [{ role: "user", content: text }] };
+          showTyping();
+          try {
+            const res2 = await fetch(WORKER_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(fallbackPayload),
+            });
+            const txt2 = await res2.text();
+            let data2;
+            try { data2 = JSON.parse(txt2); } catch { data2 = { error: txt2 }; }
+            hideTyping();
+            if (data2?.error) {
+              const errNode = createMsg("❌ Error after fallback: " + readableError(data2.error), "assistant");
+              chatEl.appendChild(errNode);
+            } else {
+              const reply = data2.choices?.[0]?.message?.content ?? "⚠️ No reply";
+              const a = createMsg(reply, "assistant");
+              chatEl.appendChild(a);
+            }
+          } catch (e2) {
+            hideTyping();
+            const errNode = createMsg("⚠️ Network error during fallback: " + e2.message, "assistant");
+            chatEl.appendChild(errNode);
           }
-          const res = await fetch(`${WORKER_URL}?verify_code=${code}`);
-          const data = await res.json();
-          if (data.valid) {
-            localStorage.setItem(INVITE_KEY, code);
-            alert("✅ Code accepted — unlocked!");
-          } else {
-            alert("❌ Invalid invite code.");
-            providerSelect.value = "gpt-4o-mini";
-          }
+          chatEl.scrollTop = chatEl.scrollHeight;
+          return;
         }
+
+        // otherwise show the error
+        const errNode = createMsg("❌ Error: " + errStr, "assistant");
+        chatEl.appendChild(errNode);
+        chatEl.scrollTop = chatEl.scrollHeight;
+        return;
       }
-    });
 
-    sendBtn.onclick = async () => {
-      const text = promptInput.value.trim();
-      if (!text) return;
-      const provider = providerSelect.value;
+      // success path
+      hideTyping();
+      const reply = data?.choices?.[0]?.message?.content ?? "⚠️ No reply";
+      const a = createMsg(reply, "assistant");
+      chatEl.appendChild(a);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    } catch (networkErr) {
+      hideTyping();
+      const errNode = createMsg("⚠️ Network error: " + (networkErr.message || networkErr), "assistant");
+      chatEl.appendChild(errNode);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+  }
 
-      addMessage(text, "user");
-      promptInput.value = "";
+  // wire send button and enter
+  sendBtn.addEventListener("click", async () => {
+    const t = promptEl.value.trim();
+    if (!t) return;
+    promptEl.value = "";
+    await sendMessage(t);
+  });
 
-      try {
-        const res = await fetch(WORKER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            provider,
-            messages: [{ role: "user", content: text }],
-          }),
-        });
+  promptEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
 
-        const data = await res.json();
-       if (data.error) {
-  const errMsg =
-    typeof data.error === "string"
-      ? data.error
-      : JSON.stringify(data.error, null, 2);
-  addMessage("❌ Error:\n" + errMsg, "assistant");
-} else {
-  const reply = data.choices?.[0]?.message?.content || "⚠️ No reply";
-  addMessage(reply, "assistant");
-}
+  clearBtn.addEventListener("click", () => { chatEl.innerHTML = ""; });
 
-      } catch (err) {
-        addMessage("⚠️ Network error: " + err.message, "assistant");
-      }
-    };
-  </script>
+  // friendly startup hint
+  (function startupHint() {
+    const intro = createMsg("Welcome — select a model and send a message. Locked models (GPT-4.1, GPT-4o) require invite codes.", "assistant");
+    addMeta(intro, "Tip: press Enter to send. Locked models will prompt for a code.");
+    chatEl.appendChild(intro);
+  })();
+
+})();
+</script>
 </body>
 </html>
