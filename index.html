@@ -92,12 +92,12 @@
 
   function markdownToHTML(text) {
     return text
-      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') // code blocks
-      .replace(/`([^`]+)`/g, '<code>$1</code>')                   // inline code
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")           // bold
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")                       // italic
-      .replace(/^\s*[-*]\s+(.*)/gm, "<ul><li>$1</li></ul>")       // bullet list
-      .replace(/\n/g, "<br>");                                    // line breaks
+      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      .replace(/^\s*[-*]\s+(.*)/gm, "<ul><li>$1</li></ul>")
+      .replace(/\n/g, "<br>");
   }
 
   function nodeMsg(text, role = "assistant") {
@@ -146,14 +146,19 @@
 
   async function sendMessage(text) {
     const model = providerSel.value || "gpt-4o-mini";
-    append(nodeMsg(text, "user"));
+    append(nodeMsg("💬 " + text, "user"));
     showTyping();
 
+    // Try PRIMARY first
     let resp = await callWorker(PRIMARY_API, model, [{ role: "user", content: text }]);
+    let usedBackup = false;
 
-    // Only fallback if primary totally fails
     if (resp.error || !resp.output_text) {
       console.warn("Primary failed, switching to backup...");
+      usedBackup = true;
+      hideTyping();
+      append(nodeMsg("⚠️ Primary server failed — switching to backup...", "assistant"));
+      showTyping();
       resp = await callWorker(BACKUP_API, model, [{ role: "user", content: text }]);
     }
 
@@ -165,6 +170,11 @@
     }
 
     const reply = resp.output_text || resp.choices?.[0]?.message?.content || "⚠️ No reply";
+
+    if (usedBackup) {
+      append(nodeMsg("🟡 *Response from backup server*", "assistant"));
+    }
+
     append(nodeMsg(reply, "assistant"));
   }
 
@@ -184,7 +194,7 @@
 
   clearBtn.onclick = () => (chatEl.innerHTML = "");
 
-  append(nodeMsg("👋 Welcome to **NOT AI** — Markdown, code & lists supported!\nTry typing: *Hello*, **bold**, or `inline code`."));
+  append(nodeMsg("👋 Welcome to **NOT AI** — Markdown, code & lists supported!<br>Try typing: *Hello*, **bold**, or `inline code`."));
 })();
 </script>
 </body>
