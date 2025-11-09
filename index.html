@@ -83,11 +83,11 @@
   const clearBtn = document.getElementById("clearBtn");
 
   providerSel.innerHTML = `
-    <option value="gpt-4o-mini">GPT-4o-mini (free & fast)</option>
+    <option value="gpt-4o-mini">GPT-4o-mini</option>
     <option value="gpt-4o" data-locked="true">GPT-4o (locked)</option>
     <option value="gpt-4.1-mini" data-locked="true">GPT-4.1-mini (locked)</option>
-    <option value="gemini-2.5-flash">Gemini 2.5 Flash (free)</option>
-    <option value="deepseek">DeepSeek (free)</option>
+    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+    <option value="deepseek">DeepSeek</option>
   `;
 
   function markdownToHTML(text) {
@@ -96,19 +96,14 @@
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/^\s*[-*]\s+(.*)/gm, "<ul><li>$1</li></ul>")
       .replace(/\n/g, "<br>");
   }
 
-  function nodeMsg(text, role = "assistant") {
+  function appendMsg(text, role) {
     const div = document.createElement("div");
-    div.className = "msg " + (role === "user" ? "user" : "assistant");
+    div.className = `msg ${role}`;
     div.innerHTML = markdownToHTML(text);
-    return div;
-  }
-
-  function append(node) {
-    chatEl.appendChild(node);
+    chatEl.appendChild(div);
     chatEl.scrollTop = chatEl.scrollHeight;
   }
 
@@ -118,7 +113,8 @@
     wrap.className = "msg assistant";
     wrap.id = "typingIndicator";
     wrap.innerHTML = '<div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
-    append(wrap);
+    chatEl.appendChild(wrap);
+    chatEl.scrollTop = chatEl.scrollHeight;
   }
 
   function hideTyping() {
@@ -128,68 +124,41 @@
 
   async function callWorker(baseUrl, provider, messages) {
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
-
       const res = await fetch(baseUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider, messages }),
-        signal: controller.signal,
       });
-      clearTimeout(timeout);
-
-      const txt = await res.text();
-      try {
-        return JSON.parse(txt);
-      } catch {
-        return { error: "Invalid JSON", raw: txt };
-      }
+      return await res.json();
     } catch (err) {
       return { error: err.message };
     }
   }
 
   async function sendMessage(text) {
-    const model = providerSel.value || "gpt-4o-mini";
-    append(nodeMsg(text, "user"));
+    const model = providerSel.value;
+    appendMsg(text, "user");
     showTyping();
 
     let resp = await callWorker(PRIMARY_API, model, [{ role: "user", content: text }]);
-
-    // Fallback to backup if primary fails
     if (resp.error || !resp.output_text) {
       console.warn("Primary failed, switching to backup...");
       hideTyping();
-      append(nodeMsg("⚠️ Connection issue — switching to backup server...", "assistant"));
+      appendMsg("⚠️ Primary server failed — trying backup...", "assistant");
       showTyping();
       resp = await callWorker(BACKUP_API, model, [{ role: "user", content: text }]);
     }
 
     hideTyping();
-
-    if (resp.error) {
-      append(nodeMsg("❌ Error: " + JSON.stringify(resp.error), "assistant"));
-      return;
-    }
-
-    const reply = resp.output_text || resp.choices?.[0]?.message?.content || "⚠️ No reply";
-
-    // 🌈 Add light emoji flavor to AI’s tone
-    const emojiReply = reply.replace(/(\.|\!|\?)(\s|$)/g, m => {
-      const emojiList = ["🤖", "✨", "💡", "🚀", "😊", "🔥"];
-      const randomEmoji = emojiList[Math.floor(Math.random() * emojiList.length)];
-      return `${m.trim()} ${randomEmoji} `;
-    });
-
-    append(nodeMsg(emojiReply, "assistant"));
+    if (resp.error) appendMsg("❌ Error: " + resp.error, "assistant");
+    else appendMsg(resp.output_text || "⚠️ No reply", "assistant");
   }
 
-  sendBtn.onclick = async () => {
-    const t = promptEl.value.trim();
-    if (!t) return;
+  sendBtn.onclick = () => {
+    const txt = promptEl.value.trim();
+    if (!txt) return;
     promptEl.value = "";
-    await sendMessage(t);
+    sendMessage(txt);
   };
 
   promptEl.addEventListener("keydown", e => {
@@ -200,8 +169,6 @@
   });
 
   clearBtn.onclick = () => (chatEl.innerHTML = "");
-
-  append(nodeMsg("👋 Welcome to **NOT AI** — fast, simple, emoji-friendly chat!<br>Try typing: *Hello*, **bold**, or `inline code`."));
 })();
 </script>
 </body>
