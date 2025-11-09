@@ -285,6 +285,40 @@
 
   clearBtn.onclick = () => (chatEl.innerHTML = "");
 })();
+  function addCopyButtons() {
+  document.querySelectorAll('.msg.assistant pre').forEach(pre => {
+    // avoid duplicates
+    if (pre.querySelector('.copy-btn')) return;
+
+    const btn = document.createElement('button');
+    btn.textContent = '📋 Copy';
+    btn.className = 'copy-btn';
+    btn.onclick = () => {
+      const code = pre.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy', 1500);
+      });
+    };
+
+    pre.style.position = 'relative';
+    btn.style.position = 'absolute';
+    btn.style.top = '6px';
+    btn.style.right = '8px';
+    btn.style.background = '#1e293b';
+    btn.style.color = '#f8fafc';
+    btn.style.border = 'none';
+    btn.style.padding = '2px 6px';
+    btn.style.borderRadius = '6px';
+    btn.style.cursor = 'pointer';
+    btn.style.fontSize = '12px';
+    btn.style.opacity = '0.7';
+    btn.onmouseenter = () => btn.style.opacity = '1';
+    btn.onmouseleave = () => btn.style.opacity = '0.7';
+
+    pre.appendChild(btn);
+  });
+}
 </script>
 </body>
 </html>
