@@ -149,15 +149,14 @@
     append(nodeMsg("💬 " + text, "user"));
     showTyping();
 
-    // Try PRIMARY first
+    // Always try PRIMARY first
     let resp = await callWorker(PRIMARY_API, model, [{ role: "user", content: text }]);
-    let usedBackup = false;
 
+    // Only use backup if primary fails
     if (resp.error || !resp.output_text) {
       console.warn("Primary failed, switching to backup...");
-      usedBackup = true;
       hideTyping();
-      append(nodeMsg("⚠️ Primary server failed — switching to backup...", "assistant"));
+      append(nodeMsg("⚠️ Primary server failed — using backup...", "assistant"));
       showTyping();
       resp = await callWorker(BACKUP_API, model, [{ role: "user", content: text }]);
     }
@@ -170,11 +169,6 @@
     }
 
     const reply = resp.output_text || resp.choices?.[0]?.message?.content || "⚠️ No reply";
-
-    if (usedBackup) {
-      append(nodeMsg("🟡 *Response from backup server*", "assistant"));
-    }
-
     append(nodeMsg(reply, "assistant"));
   }
 
