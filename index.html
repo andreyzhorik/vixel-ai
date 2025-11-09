@@ -44,6 +44,39 @@
   .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
   @keyframes blink{0%{opacity:.15}50%{opacity:1}100%{opacity:.15}}
   @media (max-width:640px){.app{height:100vh;border-radius:0}}
+  .msg.assistant code.inline {
+  background: #1a2335;
+  color: #facc15;
+  padding: 2px 5px;
+  border-radius: 5px;
+  font-family: monospace;
+}
+.msg.assistant pre code {
+  display: block;
+  background: #0f172a;
+  padding: 10px;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+.msg.assistant h1, h2, h3, h4, h5, h6 {
+  margin: 6px 0;
+  color: #60a5fa;
+}
+.msg.assistant blockquote {
+  border-left: 3px solid #3b82f6;
+  margin: 8px 0;
+  padding-left: 10px;
+  color: #9ca3af;
+  font-style: italic;
+}
+.msg.assistant ul, .msg.assistant ol {
+  margin: 4px 0 4px 20px;
+}
+.msg.assistant hr {
+  border: 0;
+  border-top: 1px solid #334155;
+  margin: 10px 0;
+}
 </style>
 </head>
 <body>
@@ -90,14 +123,59 @@
     <option value="deepseek">DeepSeek</option>
   `;
 
-  function markdownToHTML(text) {
-    return text
-      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/\n/g, "<br>");
-  }
+  function markdownToHTML(md) {
+  if (!md) return "";
+
+  // Escape < and > so markdown can’t inject HTML
+  md = md.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // Code blocks ```
+  md = md.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code.trim()}</code></pre>`);
+
+  // Headings ####, ###, ##, #
+  md = md.replace(/^###### (.*$)/gim, '<h6>$1</h6>');
+  md = md.replace(/^##### (.*$)/gim, '<h5>$1</h5>');
+  md = md.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+  md = md.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  md = md.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  md = md.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // Horizontal rule ---
+  md = md.replace(/^---$/gim, '<hr>');
+
+  // Blockquotes >
+  md = md.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // Ordered lists 1. item
+  md = md.replace(/^\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>');
+  md = md.replace(/<\/ol>\s*<ol>/gim, ''); // merge adjacent lists
+
+  // Unordered lists - item or * item
+  md = md.replace(/^[-*]\s+(.*$)/gim, '<ul><li>$1</li></ul>');
+  md = md.replace(/<\/ul>\s*<ul>/gim, ''); // merge adjacent lists
+
+  // Bold **text**
+  md = md.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+  // Italic *text* or _text_
+  md = md.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+  md = md.replace(/(^|[^_])_(?!_)([^_]+)_(?!_)/g, '$1<em>$2</em>');
+
+  // Inline code `code`
+  md = md.replace(/`([^`\n]+)`/g, "<code class='inline'>$1</code>");
+
+  // Links [text](url)
+  md = md.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+  // Line breaks
+  md = md.replace(/\n{2,}/g, "</p><p>");
+  md = md.replace(/\n/g, "<br>");
+
+  // Wrap paragraphs
+  md = `<p>${md}</p>`;
+  return md;
+}
+
 
   function appendMsg(text, role) {
     const div = document.createElement("div");
