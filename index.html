@@ -29,6 +29,11 @@
   .msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent-soft),var(--accent));color:#fff;border-bottom-right-radius:6px}
   .msg.assistant{align-self:flex-start;background:#111827;color:var(--text);border-bottom-left-radius:6px}
   .msg strong{color:#fff;font-weight:700}
+  .msg em{font-style:italic;color:#cbd5e1}
+  .msg code{background:#1e293b;padding:2px 5px;border-radius:4px;font-family:monospace;color:#93c5fd}
+  .msg pre{background:#1e293b;padding:10px;border-radius:8px;overflow-x:auto;font-family:monospace;color:#93c5fd}
+  .msg ul{margin:6px 0;padding-left:20px}
+  .msg li{margin:3px 0}
   .meta{font-size:12px;color:var(--muted);margin-top:6px}
   footer{display:flex;gap:10px;padding:14px;border-top:1px solid rgba(255,255,255,0.04);background:#0d1525}
   textarea{flex:1;min-height:56px;border-radius:10px;padding:12px;background:#0c1222;border:1px solid rgba(255,255,255,0.06);color:var(--text);resize:none}
@@ -42,36 +47,34 @@
 </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="NOT AI chat UI">
+  <div class="app">
     <header>
       <div class="brand">
         <div class="logo">N-A</div>
         <div>
           <div class="title">NOT AI</div>
-          <div class="small">Local & Private Chat UI</div>
+          <div class="small">Private Local Chat</div>
         </div>
       </div>
-
       <div class="controls">
         <label class="small" for="provider">Model</label>
-        <select id="provider" title="Choose model"></select>
-        <button class="btn" id="clearBtn" title="Clear chat">Clear</button>
+        <select id="provider"></select>
+        <button class="btn" id="clearBtn">Clear</button>
       </div>
     </header>
 
-    <main class="chat" id="chat" aria-live="polite"></main>
+    <main class="chat" id="chat"></main>
 
     <footer>
-      <textarea id="prompt" placeholder="Type your message..." aria-label="Message input"></textarea>
+      <textarea id="prompt" placeholder="Type your message..."></textarea>
       <button class="send" id="sendBtn">Send</button>
     </footer>
   </div>
 
 <script>
 (() => {
-  /* ===== CONFIG ===== */
-  const PRIMARY_API = "https://plain-pine-b32a.mrviktor2426.workers.dev/"; // main
-  const BACKUP_API  = "https://wispy-voice-741d.mrviktor2426.workers.dev/"; // backup
+  const PRIMARY_API = "https://plain-pine-b32a.mrviktor2426.workers.dev/";
+  const BACKUP_API  = "https://wispy-voice-741d.mrviktor2426.workers.dev/";
 
   const providerSel = document.getElementById("provider");
   const chatEl = document.getElementById("chat");
@@ -79,28 +82,28 @@
   const sendBtn = document.getElementById("sendBtn");
   const clearBtn = document.getElementById("clearBtn");
 
-  // Fill model dropdown
-  if (providerSel) {
-    providerSel.innerHTML = `
-      <option value="gpt-4o-mini" data-locked="false">GPT-4o-mini (free and good thinking)</option>
-      <option value="gpt-4o" data-locked="true">GPT-4o (locked and good for everything)</option>
-      <option value="gpt-4.1-mini" data-locked="true">GPT-4.1-mini (locked and good for school)</option>
-      <option value="gemini-2.5-flash" data-locked="false">Gemini 2.5 Flash (free)</option>
-      <option value="deepseek" data-locked="false">DeepSeek (free)</option>
-    `;
+  providerSel.innerHTML = `
+    <option value="gpt-4o-mini">GPT-4o-mini (free & fast)</option>
+    <option value="gpt-4o" data-locked="true">GPT-4o (locked)</option>
+    <option value="gpt-4.1-mini" data-locked="true">GPT-4.1-mini (locked)</option>
+    <option value="gemini-2.5-flash">Gemini 2.5 Flash (free)</option>
+    <option value="deepseek">DeepSeek (free)</option>
+  `;
+
+  function markdownToHTML(text) {
+    return text
+      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') // code blocks
+      .replace(/`([^`]+)`/g, '<code>$1</code>')                   // inline code
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")           // bold
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")                       // italic
+      .replace(/^\s*[-*]\s+(.*)/gm, "<ul><li>$1</li></ul>")       // bullet list
+      .replace(/\n/g, "<br>");                                    // line breaks
   }
 
-  /* === CREATE MESSAGE ELEMENT === */
   function nodeMsg(text, role = "assistant") {
     const div = document.createElement("div");
     div.className = "msg " + (role === "user" ? "user" : "assistant");
-
-    // ✅ Bold markdown-like **text** + line breaks
-    let html = text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\n/g, "<br>");
-
-    div.innerHTML = html;
+    div.innerHTML = markdownToHTML(text);
     return div;
   }
 
@@ -134,56 +137,54 @@
       try {
         return JSON.parse(txt);
       } catch {
-        return { error: txt };
+        return { error: "Invalid JSON" };
       }
     } catch (err) {
-      return { error: { message: err.message || String(err) } };
+      return { error: err.message };
     }
   }
 
   async function sendMessage(text) {
-    const model = providerSel?.value || "gpt-4o-mini";
+    const model = providerSel.value || "gpt-4o-mini";
     append(nodeMsg(text, "user"));
     showTyping();
 
     let resp = await callWorker(PRIMARY_API, model, [{ role: "user", content: text }]);
 
-    if (resp.error) {
-      append(nodeMsg("⚠️ Primary failed, trying backup...", "assistant"));
-      resp = await callWorker(BACKUP_API, "gpt-4o-mini", [{ role: "user", content: text }]);
+    // Only fallback if primary totally fails
+    if (resp.error || !resp.output_text) {
+      console.warn("Primary failed, switching to backup...");
+      resp = await callWorker(BACKUP_API, model, [{ role: "user", content: text }]);
     }
 
     hideTyping();
+
     if (resp.error) {
       append(nodeMsg("❌ Error: " + JSON.stringify(resp.error), "assistant"));
       return;
     }
 
-    const reply = resp.choices?.[0]?.message?.content || resp.output_text || "⚠️ No reply";
+    const reply = resp.output_text || resp.choices?.[0]?.message?.content || "⚠️ No reply";
     append(nodeMsg(reply, "assistant"));
   }
 
-  sendBtn.addEventListener("click", async () => {
+  sendBtn.onclick = async () => {
     const t = promptEl.value.trim();
     if (!t) return;
     promptEl.value = "";
     await sendMessage(t);
-  });
+  };
 
-  promptEl.addEventListener("keydown", (e) => {
+  promptEl.addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendBtn.click();
     }
   });
 
-  clearBtn.addEventListener("click", () => (chatEl.innerHTML = ""));
+  clearBtn.onclick = () => (chatEl.innerHTML = "");
 
-  // Startup message
-  (function startHint() {
-    const intro = nodeMsg("👋 Welcome to **NOT AI** — Choose a model and start chatting!\nLocked ones need invite codes.");
-    append(intro);
-  })();
+  append(nodeMsg("👋 Welcome to **NOT AI** — Markdown, code & lists supported!\nTry typing: *Hello*, **bold**, or `inline code`."));
 })();
 </script>
 </body>
