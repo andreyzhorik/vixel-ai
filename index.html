@@ -129,7 +129,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider, messages }),
       });
-      return await res.json();
+      const txt = await res.text();
+      return JSON.parse(txt);
     } catch (err) {
       return { error: err.message };
     }
@@ -140,18 +141,27 @@
     appendMsg(text, "user");
     showTyping();
 
+    // Try primary first
     let resp = await callWorker(PRIMARY_API, model, [{ role: "user", content: text }]);
+
+    // If primary fails, THEN use backup
     if (resp.error || !resp.output_text) {
-      console.warn("Primary failed, switching to backup...");
+      console.warn("Primary failed, trying backup...");
+      const backupResp = await callWorker(BACKUP_API, model, [{ role: "user", content: text }]);
+
       hideTyping();
-      appendMsg("⚠️ Primary server failed — trying backup...", "assistant");
-      showTyping();
-      resp = await callWorker(BACKUP_API, model, [{ role: "user", content: text }]);
+
+      if (backupResp.output_text) {
+        appendMsg("⚠️ Primary server failed — using backup.", "assistant");
+        appendMsg(backupResp.output_text, "assistant");
+      } else {
+        appendMsg("❌ Both servers failed: " + (resp.error || backupResp.error || "Unknown error"), "assistant");
+      }
+      return;
     }
 
     hideTyping();
-    if (resp.error) appendMsg("❌ Error: " + resp.error, "assistant");
-    else appendMsg(resp.output_text || "⚠️ No reply", "assistant");
+    appendMsg(resp.output_text, "assistant");
   }
 
   sendBtn.onclick = () => {
