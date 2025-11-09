@@ -25,9 +25,10 @@
     padding:8px 10px;border-radius:10px;font-weight:600;cursor:pointer}
   .btn{background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
   .chat{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
-  .msg{max-width:78%;padding:12px 16px;border-radius:12px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,0.3)}
+  .msg{max-width:78%;padding:12px 16px;border-radius:12px;line-height:1.5;box-shadow:0 6px 18px rgba(0,0,0,0.3)}
   .msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent-soft),var(--accent));color:#fff;border-bottom-right-radius:6px}
   .msg.assistant{align-self:flex-start;background:#111827;color:var(--text);border-bottom-left-radius:6px}
+  .msg strong{color:#fff;font-weight:700}
   .meta{font-size:12px;color:var(--muted);margin-top:6px}
   footer{display:flex;gap:10px;padding:14px;border-top:1px solid rgba(255,255,255,0.04);background:#0d1525}
   textarea{flex:1;min-height:56px;border-radius:10px;padding:12px;background:#0c1222;border:1px solid rgba(255,255,255,0.06);color:var(--text);resize:none}
@@ -53,13 +54,7 @@
 
       <div class="controls">
         <label class="small" for="provider">Model</label>
-        <select id="provider" title="Choose model">
-          <!-- locked models have data-locked="true" -->
-          <option value="gpt-4o-mini" data-locked="false">GPT-4o-mini (free and good thinking)</option>
-          <option value="gpt-4o" data-locked="true">GPT-4o (locked and good for everything)</option>
-          <option value="gpt-4.1-mini" data-locked="true">GPT-4.1-mini (locked and good for school)</option>
-          <option value="gpt-3.5-turbo" data-locked="false">GPT-3.5-turbo (free and simple)</option>
-        </select>
+        <select id="provider" title="Choose model"></select>
         <button class="btn" id="clearBtn" title="Clear chat">Clear</button>
       </div>
     </header>
@@ -84,6 +79,7 @@
   const sendBtn = document.getElementById("sendBtn");
   const clearBtn = document.getElementById("clearBtn");
 
+  // Fill model dropdown
   if (providerSel) {
     providerSel.innerHTML = `
       <option value="gpt-4o-mini" data-locked="false">GPT-4o-mini (free and good thinking)</option>
@@ -94,10 +90,17 @@
     `;
   }
 
+  /* === CREATE MESSAGE ELEMENT === */
   function nodeMsg(text, role = "assistant") {
     const div = document.createElement("div");
     div.className = "msg " + (role === "user" ? "user" : "assistant");
-    div.textContent = text;
+
+    // ✅ Bold markdown-like **text** + line breaks
+    let html = text
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br>");
+
+    div.innerHTML = html;
     return div;
   }
 
@@ -174,11 +177,11 @@
     }
   });
 
-  if (clearBtn) clearBtn.addEventListener("click", () => (chatEl.innerHTML = ""));
+  clearBtn.addEventListener("click", () => (chatEl.innerHTML = ""));
 
-  // Startup hint
+  // Startup message
   (function startHint() {
-    const intro = nodeMsg("👋 Welcome to NOT AI — Choose a model and start chatting! Locked ones need invite codes.");
+    const intro = nodeMsg("👋 Welcome to **NOT AI** — Choose a model and start chatting!\nLocked ones need invite codes.");
     append(intro);
   })();
 })();
