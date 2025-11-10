@@ -404,64 +404,128 @@
   populateModels();
 
   // --------------------------
-// Markdown → HTML
+// Markdown → HTML (Full version)
 // --------------------------
 function markdownToHTML(md) {
   if (!md) return "";
+
+  // escape HTML first
   md = md.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  // Save code blocks (```code```)
+  // --------------------------
+  // Handle code blocks first
+  // --------------------------
   const codeBlocks = [];
-  md = md.replace(/```([\s\S]*?)```/g, (m, code) => {
+  md = md.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
     const id = codeBlocks.length;
-    codeBlocks.push(code);
+    codeBlocks.push({ lang, code });
     return `@@CODE_BLOCK_${id}@@`;
   });
 
-  // Headers
-  md = md
-    .replace(/^###### (.*$)/gim, "<h6>$1</h6>")
-    .replace(/^##### (.*$)/gim, "<h5>$1</h5>")
-    .replace(/^#### (.*$)/gim, "<h4>$1</h4>")
-    .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-    .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-    .replace(/^# (.*$)/gim, "<h1>$1</h1>");
+  // --------------------------
+  // Footnotes
+  // --------------------------
+  const footnotes = {};
+  md = md.replace(/^\[\^(\w+)\]: (.*)$/gim, (_, name, text) => {
+    footnotes[name] = text;
+    return "";
+  });
 
+  // --------------------------
+  // Headings
+  // --------------------------
+  md = md
+    .replace(/^###### (.*)$/gim, "<h6>$1</h6>")
+    .replace(/^##### (.*)$/gim, "<h5>$1</h5>")
+    .replace(/^#### (.*)$/gim, "<h4>$1</h4>")
+    .replace(/^### (.*)$/gim, "<h3>$1</h3>")
+    .replace(/^## (.*)$/gim, "<h2>$1</h2>")
+    .replace(/^# (.*)$/gim, "<h1>$1</h1>");
+
+  // --------------------------
+  // Horizontal rules
+  // --------------------------
+  md = md.replace(/(^|\n)([-*_]){3,}(?=\n|$)/g, "\n<hr>\n");
+
+  // --------------------------
   // Blockquotes
+  // --------------------------
   md = md.replace(/(^|\n)> (.*)/g, "$1<blockquote>$2</blockquote>");
 
-  // Horizontal rule
-  md = md.replace(/(^|\n)---(\n|$)/g, "\n<hr>\n");
-
+  // --------------------------
   // Lists
+  // --------------------------
   md = md
-    .replace(/^\s*[-*] (.*)/gim, "<ul><li>$1</li></ul>")
+    .replace(/^\s*[-*+] (.*)/gim, "<ul><li>$1</li></ul>")
     .replace(/<\/ul>\s*<ul>/gim, "")
     .replace(/^\s*\d+\. (.*)/gim, "<ol><li>$1</li></ol>")
     .replace(/<\/ol>\s*<ol>/gim, "");
 
-  // Inline styles
+  // --------------------------
+  // Tables
+  // --------------------------
+  md = md.replace(/^\|(.+)\|\n\|([-\s|:]+)\|\n((?:\|.*\|\n?)*)/gm, (match, header, divider, rows) => {
+    const headers = header.split("|").map(h => `<th>${h.trim()}</th>`).join("");
+    const body = rows
+      .trim()
+      .split("\n")
+      .map(r => {
+        const cols = r.split("|").map(c => `<td>${c.trim()}</td>`).join("");
+        return `<tr>${cols}</tr>`;
+      })
+      .join("");
+    return `<table><thead><tr>${headers}</tr></thead><tbody>${body}</tbody></table>`;
+  });
+
+  // --------------------------
+  // Inline formatting
+  // --------------------------
   md = md
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")      // bold
-    .replace(/\*(.*?)\*/g, "<i>$1</i>")          // italic
-    .replace(/__(.*?)__/g, "<u>$1</u>")          // underline
-    .replace(/~~(.*?)~~/g, "<s>$1</s>")          // strikethrough
-    .replace(/`([^`]+)`/g, "<code>$1</code>");   // inline code
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")       // bold
+    .replace(/\*(.*?)\*/g, "<i>$1</i>")           // italic
+    .replace(/__(.*?)__/g, "<u>$1</u>")           // underline
+    .replace(/~~(.*?)~~/g, "<s>$1</s>")           // strikethrough
+    .replace(/`([^`]+)`/g, "<code>$1</code>")     // inline code
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>'); // links
 
-  // Links
-  md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  // --------------------------
+  // Footnote refs
+  // --------------------------
+  md = md.replace(/\[\^(\w+)\]/g, (_, name) => {
+    if (footnotes[name]) {
+      return `<sup id="fnref-${name}"><a href="#fn-${name}">[${name}]</a></sup>`;
+    }
+    return "";
+  });
 
-  // Replace line breaks
+  // --------------------------
+  // Line breaks
+  // --------------------------
   md = md.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>");
 
+  // --------------------------
   // Restore code blocks
+  // --------------------------
   md = md.replace(/@@CODE_BLOCK_(\d+)@@/g, (_, i) => {
-    const code = codeBlocks[+i] || "";
-    return `<pre><code>${code}</code></pre>`;
+    const { lang, code } = codeBlocks[+i];
+    const languageClass = lang ? ` class="language-${lang}"` : "";
+    return `<pre><code${languageClass}>${code}</code></pre>`;
   });
+
+  // --------------------------
+  // Append footnote section
+  // --------------------------
+  if (Object.keys(footnotes).length > 0) {
+    md += `<hr><section class="footnotes"><ol>`;
+    for (const [name, text] of Object.entries(footnotes)) {
+      md += `<li id="fn-${name}">${text} <a href="#fnref-${name}">↩</a></li>`;
+    }
+    md += `</ol></section>`;
+  }
 
   return `<p>${md}</p>`;
 }
+
 
   // --------------------------
   // Append message + copy btn
