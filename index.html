@@ -359,31 +359,32 @@
   const clearBtn = document.getElementById("clearBtn");
 
   // --------------------------
-  // Invite code system
-  // --------------------------
-  const VERIFY_URL = `${PRIMARY_API}?verify_code=`;
-  let inviteCode = localStorage.getItem("inviteCode");
-  let isVerified = localStorage.getItem("isVerified") === "true";
+// Invite code system (client)
+// --------------------------
+const VERIFY_URL = `${PRIMARY_API}?verify_code=`;
+let inviteCode = localStorage.getItem("inviteCode");
+let isVerified = localStorage.getItem("isVerified") === "true";
 
-  async function verifyInvite() {
-    const code = prompt("Enter invite code to unlock locked models:");
-    if (!code) return alert("❌ No code entered.");
-    try {
-      const res = await fetch(VERIFY_URL + encodeURIComponent(code));
-      const data = await res.json();
-      if (data.valid) {
-        localStorage.setItem("inviteCode", code);
-        localStorage.setItem("isVerified", "true");
-        alert("✅ Invite code accepted! Locked models are now unlocked.");
-        isVerified = true;
-        populateModels();
-      } else {
-        alert("❌ Invalid invite code.");
-      }
-    } catch (err) {
-      alert("⚠️ Error verifying code: " + err.message);
+async function verifyInvite() {
+  const code = prompt("Enter invite code to unlock locked models:");
+  if (!code) return alert("❌ No code entered.");
+  try {
+    const res = await fetch(VERIFY_URL + encodeURIComponent(code));
+    const data = await res.json();
+    if (data.valid) {
+      localStorage.setItem("inviteCode", code);
+      localStorage.setItem("isVerified", "true");
+      alert("✅ Invite code accepted! Locked models are now unlocked.");
+      isVerified = true;
+      populateModels();
+    } else {
+      alert("❌ This invite code is invalid or already used.");
     }
+  } catch (err) {
+    alert("⚠️ Error verifying code: " + err.message);
   }
+}
+
 
   // --------------------------
   // Populate model dropdown
